@@ -3,107 +3,42 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Shop Shop redirect</title>
+    <title>Shop Shop Redirect</title>
 
     <style media="screen">
       body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
     </style>
   </head>
-  <body style="display: flex;justify-content: center;align-items: center;height: 400px;">
+  <body >
+    <div style="display: flex;justify-content: center;align-items: center;height: 400px;">
+      <h4 style="text-align: center;">Cargando...</h4>
+    </div>
 
-    <h4 style="text-align: center;">Cargando...</h4>
-  
     <script>
-      function postMessage(payload) {
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(JSON.stringify(payload))
-        }
-      }
-      
       document.addEventListener('DOMContentLoaded', function() {
         try {
           var urlParams = new URLSearchParams(window.location.search);
-          if (!urlParams.has('code')){
-            postMessage({
-              status: 'ERROR',
-              message: 'Query param code is required'
-            });
-            return;
-          }
+          var redirect='';
+
           if (!urlParams.has('state')){
-            postMessage({
-              status: 'ERROR',
-              message: 'Query param state is required'
-            });
+            throw new Error('State must be defined')
+           return;
+          }
+          const state = urlParams.get('state');
+
+          if (!urlParams.has('code')){
+            redirect = state + '?status=fail&message=code must be defined';
+            window.location.replace(redirect);
             return;
           }
           const code = urlParams.get('code');
-          const state = urlParams.get('state').split('|');
-          if (state.length !== 2) {
-            postMessage({
-              status: 'ERROR',
-              message: 'Query param state dont have a correct format'
-            });
-            return;
-          }
-          const opId = state[0];
-          const env = state[1].toLowerCase();
-          if (['development', 'staging', 'production'].indexOf(env) === -1) {
-            postMessage({
-              status: 'ERROR',
-              message: 'Query param state dont have a valid env, invalid value:' + env 
-            });
-            return;
-          }
-
-          var url= '';
-          switch (env) {
-            case 'development':
-              url = 'https://us-central1-beast-development.cloudfunctions.net/createSellerCredentials?code=' + code +'&state=' + opId
-              break;
-            case 'staging':
-              url = 'https://us-central1-beast-staging.cloudfunctions.net/createSellerCredentials?code=' + code +'&state=' + opId
-              break;
-            case 'production':
-              url = 'http://localhost:5001/beast-development/us-central1/createSellerCredentials?code=' + code +'&state=' + opId
-              break;
-          }
         
-
-          // making request to create seller credential function
-          var xhr = new XMLHttpRequest();
-          // 2. Configure it: GET-request for the URL /article/.../load
-          xhr.open('GET', url);
-          // 3. Send the request over the network
-          xhr.send();
-          // 4. This will be called after the response is received
-          xhr.onload = function() {
-            if (xhr.status != 200) { // analyze HTTP status of the response
-              postMessage({
-                status: 'ERROR',
-                message: 'Invalid status from create seller credential function, invalid status: ' + xhr.status + ' message: ' + xhr.response.message
-              });
-              return;
-            } else { // show the result
-              postMessage({
-                status: 'OK',
-                message: ''
-              });
-            }
-          };
-
-          xhr.onerror = function() {
-            postMessage({
-              status: 'ERROR',
-              message: 'Error in create seller credentials function'
-            });
-          };
+          redirect = state + '?status=ok&code=' + code;
+          window.location.replace(redirect);
         } catch (e) {
-          postMessage({
-              status: 'ERROR',
-              message: 'Unexpected error, error message: ' + e.message
-            });
+
         }
+          
       });
     </script>
   </body>
